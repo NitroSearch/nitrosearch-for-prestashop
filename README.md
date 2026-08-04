@@ -1,18 +1,37 @@
-# NitroSearch for PrestaShop
+<p align="center">
+  <img src="assets/mark.svg" width="72" height="72" alt="NitroSearch">
+</p>
 
-Fast, typo-tolerant search for your PrestaShop shop. Results appear as your shoppers type.
+<h1 align="center">NitroSearch for PrestaShop</h1>
 
-- **Instant results** on the search box your theme already has — no template edits.
-- **Typo tolerance**, so "hummingbrid" still finds the hummingbird t-shirt.
-- **Filters** by stock, sale, brand and category.
-- **Your shop's own combinations** fold into one result, with the price range and every SKU searchable.
-- **CMS pages** indexed alongside products, if you want them.
+<p align="center">
+  <strong>Amazon-quality search for PrestaShop.</strong><br>
+  Instant, typo-tolerant product search served from the cloud — without adding load to your shop.
+</p>
 
-Search runs directly between the shopper's browser and the search engine with a read-only key
-scoped to your shop. **It never passes back through PHP**, so your search stays fast even when your
-server is busy — and this module is not on that path at all.
+<p align="center">
+  <a href="https://nitrosearch.io/prestashop">nitrosearch.io</a> &nbsp;·&nbsp;
+  <a href="https://nitrosearch.io/pricing">Pricing</a> &nbsp;·&nbsp;
+  <a href="https://nitrosearch.io/legal/privacy">Privacy</a> &nbsp;·&nbsp;
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
 
-Requires PrestaShop 1.7.6 or newer and a [NitroSearch](https://nitrosearch.io) account.
+<p align="center">
+  <a href="https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/NitroSearch/nitrosearch-for-prestashop?label=release&color=2563eb"></a>
+  <img alt="PrestaShop 1.7.6+" src="https://img.shields.io/badge/PrestaShop-1.7.6%2B%20%C2%B7%208.x-blue">
+  <img alt="PHP 7.2+" src="https://img.shields.io/badge/PHP-7.2%2B-777bb4">
+  <a href="LICENSE"><img alt="AFL-3.0" src="https://img.shields.io/badge/licence-AFL--3.0-green"></a>
+</p>
+
+---
+
+<p align="center">
+  <img src="assets/screenshot-dropdown.webp" alt="NitroSearch instant search dropdown on a PrestaShop storefront: typo-tolerant results with images, euro prices, and brand and category filters appearing as the shopper types" width="900">
+</p>
+
+NitroSearch is a hosted search service. This module syncs your PrestaShop catalogue to it and lets it
+serve instant, typo-tolerant search and filtering to your shoppers — every query goes straight from
+the browser to our engine, so your own server is never in the search path.
 
 ## Install
 
