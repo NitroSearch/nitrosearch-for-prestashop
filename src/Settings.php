@@ -70,6 +70,11 @@ final class Settings
         'RESYNC_TOKEN_DONE' => '',
         'INDEX_CMS' => true,
         'RESULTS_TAKEOVER' => true,
+        // Stand the theme's own search suggestions down once ours have mounted.
+        // On by default because two stacked dropdowns showing different results is
+        // never what anyone wants; a setting exists because a heavily customised
+        // theme may bind something we should not be touching.
+        'SUPPRESS_NATIVE_SEARCH' => true,
         'SHOW_BADGE' => false,
         'SHARE_SEARCH_DATA' => true,
         'SELECTOR' => '',

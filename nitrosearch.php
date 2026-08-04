@@ -20,6 +20,7 @@ if (!defined('_PS_VERSION_')) {
 
 require_once __DIR__ . '/autoload.php';
 
+use NitroSearch\Admin\ConfigurePage;
 use NitroSearch\Api\Client;
 use NitroSearch\Settings;
 use NitroSearch\Sync\Drain;
@@ -292,6 +293,18 @@ class NitroSearch extends Module
         }
     }
 
+    /**
+     * The Configure screen — the only surface a merchant ever uses.
+     *
+     * @return string
+     */
+    public function getContent()
+    {
+        $page = new ConfigurePage($this);
+
+        return $page->render();
+    }
+
     // ── Storefront ────────────────────────────────────────────────────────────
 
     /**
@@ -387,7 +400,67 @@ class NitroSearch extends Module
         $json = str_replace('<', '<', $json);
 
         return '<script>window.NitroSearchConfig=' . $json . ';</script>' . "\n"
-            . '<script src="' . htmlspecialchars($loaderUrl, ENT_QUOTES, 'UTF-8') . '" defer></script>' . "\n";
+            . '<script src="' . htmlspecialchars($loaderUrl, ENT_QUOTES, 'UTF-8') . '" defer></script>' . "\n"
+            . $this->suppressNativeSearchMarkup();
+    }
+
+    /**
+     * Stand down the theme's own search suggestions once ours are actually up.
+     *
+     * PrestaShop's `ps_searchbar` binds a jQuery UI autocomplete to the very input
+     * we enhance, so without this a shopper sees TWO dropdowns stacked on one
+     * search box, showing two different sets of results. Verified in the sandbox:
+     * both render, ours below the theme's.
+     *
+     * THE TIMING IS THE WHOLE DESIGN, and it is deliberately not "destroy it on
+     * page load". If our bundle ever fails to arrive — a blocked request, an
+     * offline shopper, a CDN incident — pre-emptively destroying the native
+     * autocomplete would leave the shop with NO suggestions at all, and we would
+     * have made a working storefront worse while our own feature was down. So the
+     * native one is left alone until ours has demonstrably mounted, and the check
+     * is bounded so it cannot poll forever on a page where it never does.
+     *
+     * Losing the race in this direction is harmless: the worst case is a shopper
+     * briefly seeing the theme's dropdown before ours replaces it.
+     *
+     * @return string
+     */
+    private function suppressNativeSearchMarkup()
+    {
+        if (!(bool) Settings::get('SUPPRESS_NATIVE_SEARCH')) {
+            return '';
+        }
+
+        // Kept as one small inline block rather than a file: it is under a
+        // kilobyte, it must run on every page, and a separate request for this
+        // would cost more than the code.
+        $js = <<<'JS'
+(function(){
+  var tries = 0;
+  function ours(){ return document.querySelector('.nitrosearch-host'); }
+  function stand_down(){
+    var $ = window.jQuery;
+    if (!$) { return true; }
+    var box = $('#search_widget input[type=text]');
+    if (!box.length) { return true; }
+    try { box.psBlockSearchAutocomplete('destroy'); return true; } catch (e) {}
+    try { box.autocomplete('destroy'); return true; } catch (e) {}
+    return true;
+  }
+  function poll(){
+    if (ours()) { stand_down(); return; }
+    if (++tries > 50) { return; }   // ~5s, then give up and leave the theme alone
+    setTimeout(poll, 100);
+  }
+  function arm(){ tries = 0; poll(); }
+  document.addEventListener('focusin', function(e){
+    if (e.target && e.target.closest && e.target.closest('#search_widget')) { arm(); }
+  }, true);
+  document.addEventListener('DOMContentLoaded', function(){ if (ours()) { stand_down(); } });
+})();
+JS;
+
+        return '<script>' . $js . '</script>' . "\n";
     }
 
     /**

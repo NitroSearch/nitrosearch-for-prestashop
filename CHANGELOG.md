@@ -10,6 +10,19 @@ All notable changes to this module are documented here. The format follows
 
 - First release. Connects a PrestaShop shop to NitroSearch, keeps its catalogue in sync, and puts
   the storefront search widget on the theme's existing search box.
+  - **A Configure screen** that leads with status rather than settings: connected or not, how much
+    of the plan is used, what is still waiting to be sent, when the last send was and what went
+    wrong if anything did — then Connect, Re-send everything, Send now and Disconnect. It never
+    renders the sync secret or the search key; the cron address is shown because it is the one
+    thing a merchant has to copy.
+  - **Confirming the domain asks before it acts.** The service confirms a shop by making a request
+    to it from the outside, so it may already have succeeded without this module being involved.
+    Pressing "Try again" polls for that answer first and only triggers a fresh check if the answer
+    is still no.
+  - **The theme's own search suggestions step aside**, but only once ours have actually appeared.
+    PrestaShop's search bar binds a suggestions list to the same input, so without this a shopper
+    sees two stacked lists showing different results. Doing it on page load instead would mean a
+    shop whose widget failed to load had no suggestions at all — worse than two. Can be turned off.
   - **A local outbox.** Catalogue hooks write a coalesced row and do no network work, so saves,
     bulk edits, imports and checkout stay fast — and the shop keeps recording changes while the
     service is unreachable.
