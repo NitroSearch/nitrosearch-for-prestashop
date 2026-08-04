@@ -79,6 +79,11 @@ final class Drain
         ResyncCheck::maybeRun();
         FullSync::resumeIfStalled();
 
+        // Queued order reports ride this heartbeat rather than a schedule of their
+        // own. On a platform with no job queue, "send it later" has to mean an
+        // existing tick — and checkout must never wait on our service.
+        OrderAttribution::flush();
+
         $deadline = microtime(true) + self::CRON_BUDGET;
         $batches = 0;
         $items = 0;
@@ -157,6 +162,7 @@ final class Drain
 
         try {
             ResyncCheck::maybeRun();
+            OrderAttribution::flush(3);
             self::drainOnce();
         } catch (\Exception $e) {
             self::recordError('tick: ' . $e->getMessage());

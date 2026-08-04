@@ -25,7 +25,9 @@ use NitroSearch\Api\Client;
 use NitroSearch\Settings;
 use NitroSearch\Sync\Drain;
 use NitroSearch\Sync\FullSync;
+use NitroSearch\Sync\OrderAttribution;
 use NitroSearch\Sync\Outbox;
+use NitroSearch\Support\Design;
 
 /**
  * NitroSearch — fast, typo-tolerant search for PrestaShop.
@@ -48,7 +50,7 @@ class NitroSearch extends Module
     {
         $this->name = 'nitrosearch';
         $this->tab = 'search_filter';
-        $this->version = '1.0.0';
+        $this->version = '1.1.0';
         $this->author = 'WebDeviAnt Studios';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.7.6.0', 'max' => _PS_VERSION_);
@@ -82,6 +84,10 @@ class NitroSearch extends Module
             return false;
         }
 
+        if (!Db::getInstance()->execute(OrderAttribution::schema())) {
+            return false;
+        }
+
         foreach ($this->hookList() as $hook) {
             if (!$this->registerHook($hook)) {
                 return false;
@@ -104,6 +110,7 @@ class NitroSearch extends Module
     {
         FullSync::cancel();
         Outbox::drop();
+        OrderAttribution::drop();
         Settings::purge();
 
         return parent::uninstall();
@@ -141,6 +148,11 @@ class NitroSearch extends Module
             // Stock. Fires on orders too, which is exactly when in-stock badges go
             // stale and the reason this is worth listening to.
             'actionUpdateQuantity',
+            // Search -> order attribution. The cart hook fires during the widget's
+            // own add-to-cart request, which is the only moment the search marker
+            // is visible; the order hook is where the attributed slice is worked out.
+            'actionCartSave',
+            'actionValidateOrder',
             // Storefront: the widget markup, and the no-cron drain fallback.
             // `displayHeader` rather than `actionFrontControllerSetMedia` because
             // the config must be emitted INLINE, immediately before the loader —
@@ -308,6 +320,22 @@ class NitroSearch extends Module
     // ── Storefront ────────────────────────────────────────────────────────────
 
     /**
+     * @param array<string, mixed> $params
+     */
+    public function hookActionCartSave($params)
+    {
+        OrderAttribution::captureAdd();
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     */
+    public function hookActionValidateOrder($params)
+    {
+        OrderAttribution::orderValidated($params);
+    }
+
+    /**
      * Emit the widget into `<head>`, and take the opportunity to drain.
      *
      * @return string markup, or '' when the shop is not ready to search
@@ -363,6 +391,11 @@ class NitroSearch extends Module
             'content' => (bool) Settings::get('INDEX_CMS'),
             'analytics' => (bool) Settings::get('SHARE_SEARCH_DATA'),
             'badge' => (bool) Settings::get('SHOW_BADGE'),
+            // Appearance, resolved to `--ns-*` token VALUES here so the shared
+            // widget bundle never learns a preset name. Empty objects when the
+            // merchant is on the defaults.
+            'theme' => (object) Design::theme(),
+            'layout' => (object) Design::layout(),
         );
 
         if ((bool) Settings::get('SHOW_BADGE')) {

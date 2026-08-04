@@ -6,6 +6,30 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-08-04
+
+### Added
+
+- **Search → order attribution.** When a shopper adds to cart from the search panel, that product is
+  noted against their own cart; when the order is placed, the items that came from a search make up
+  the attributed slice and its value is reported. **The real order id never leaves the shop** — it is
+  hashed first — and nothing about the customer, address, payment or the rest of the basket is
+  included. Honours the "Share anonymous search data" switch. Reporting rides the background sync,
+  never checkout: a slow or unreachable service must never slow, and certainly never fail, a sale.
+- **Appearance settings** — density, colours, corners, accent, panel width, results per dropdown and
+  where filters sit. Choices are resolved to plain style values before the page is built, so the
+  shared storefront bundle never learns a preset name and changing one needs no update.
+- **Your shop's scope is stated on the Configure screen.** NitroSearch indexes one shop, in one
+  language, at one currency. The screen now names which, and lists the currencies and (on multistore)
+  the shops that are therefore *not* indexed, rather than leaving a merchant to discover it.
+
+### Fixed
+
+- **Prices and names no longer depend on who triggered the sync.** They were read from the ambient
+  request context — the shopper's in a front-office request, an employee's in the back office, the
+  default under cron — so the same product could be indexed at one currency by a page-load sync and
+  another by a scheduled one. Both are now pinned to the shop's own defaults.
+
 ## [1.0.0] — 2026-08-04
 
 ### Added
@@ -46,5 +70,6 @@ All notable changes to this module are documented here. The format follows
     in integer minor units with the currency's own exponent — so yen and dinar are correct rather
     than scaled by a hundred out of habit.
 
-[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/tag/v1.0.0

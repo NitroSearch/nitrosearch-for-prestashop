@@ -20,7 +20,9 @@ use NitroSearch\Api\Client;
 use NitroSearch\Settings;
 use NitroSearch\Sync\Drain;
 use NitroSearch\Sync\FullSync;
+use NitroSearch\Sync\OrderAttribution;
 use NitroSearch\Sync\Outbox;
+use NitroSearch\Support\ShopContext;
 use Tools;
 
 /**
@@ -285,6 +287,13 @@ final class ConfigurePage
             'SHOW_BADGE' => (bool) Tools::getValue('nitro_show_badge'),
             'SHARE_SEARCH_DATA' => (bool) Tools::getValue('nitro_share_search_data'),
             'SELECTOR' => trim((string) Tools::getValue('nitro_selector')),
+            'DESIGN_LOOK' => self::choice('nitro_design_look', array('roomy', 'compact', 'images', 'text'), 'roomy'),
+            'DESIGN_SCHEME' => self::choice('nitro_design_scheme', array('light', 'dark', 'auto'), 'light'),
+            'DESIGN_CORNERS' => self::choice('nitro_design_corners', array('rounded', 'soft', 'square'), 'rounded'),
+            'DESIGN_ACCENT' => trim((string) Tools::getValue('nitro_design_accent')),
+            'DESIGN_WIDTH' => self::choice('nitro_design_width', array('auto', 'wide', 'match'), 'auto'),
+            'DESIGN_PER_PAGE' => max(2, min(20, (int) Tools::getValue('nitro_design_per_page'))),
+            'DESIGN_FILTERS' => self::choice('nitro_design_filters', array('auto', 'top', 'off'), 'auto'),
         ));
 
         $this->confirmations[] = $this->l('Settings saved.');
@@ -296,6 +305,27 @@ final class ConfigurePage
             FullSync::start(array('page'));
             $this->confirmations[] = $this->l('Adding your pages to the index now.');
         }
+    }
+
+    /**
+     * A submitted value, but only if it is one we offered.
+     *
+     * The appearance settings resolve to CSS token values on a live storefront,
+     * so an unrecognised preset must fall back rather than be stored and later
+     * looked up — an allowlist here is what stops a hand-crafted POST putting an
+     * arbitrary string anywhere near the widget config.
+     *
+     * @param string             $field
+     * @param array<int, string> $allowed
+     * @param string             $fallback
+     *
+     * @return string
+     */
+    private static function choice($field, array $allowed, $fallback)
+    {
+        $value = (string) Tools::getValue($field);
+
+        return in_array($value, $allowed, true) ? $value : $fallback;
     }
 
     /**
@@ -413,6 +443,28 @@ final class ConfigurePage
             // Presence, never the value — see the class docblock.
             'nitro_has_search_key' => (string) Settings::get('SCOPED_SEARCH_KEY') !== '',
             'nitro_store_id' => (string) Settings::get('STORE_ID'),
+
+            // Appearance
+            'nitro_design_look' => (string) Settings::get('DESIGN_LOOK'),
+            'nitro_design_scheme' => (string) Settings::get('DESIGN_SCHEME'),
+            'nitro_design_corners' => (string) Settings::get('DESIGN_CORNERS'),
+            'nitro_design_accent' => (string) Settings::get('DESIGN_ACCENT'),
+            'nitro_design_width' => (string) Settings::get('DESIGN_WIDTH'),
+            'nitro_design_per_page' => (int) Settings::get('DESIGN_PER_PAGE'),
+            'nitro_design_filters' => (string) Settings::get('DESIGN_FILTERS'),
+
+            // What this shop indexes, and what it therefore does NOT. Surfaced
+            // because one NitroSearch store is one shop, one language and one
+            // currency — a limit of the ingest contract, not of this module — and
+            // a merchant running more than one must be told which one they get.
+            'nitro_currency' => ShopContext::currencyIso(),
+            'nitro_other_currencies' => ShopContext::unindexedCurrencies(),
+            'nitro_multistore' => ShopContext::isMultistore(),
+            'nitro_other_shops' => ShopContext::unindexedShops(),
+
+            'nitro_pending_reports' => $connected
+                ? (int) \Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . OrderAttribution::table() . '`')
+                : 0,
         );
     }
 

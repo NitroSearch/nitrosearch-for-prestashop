@@ -24,6 +24,7 @@ use Manufacturer;
 use NitroSearch\AdapterKit\CurrencyExponents;
 use NitroSearch\AdapterKit\ItemBuilder;
 use NitroSearch\AdapterKit\Money;
+use NitroSearch\Support\ShopContext;
 use Product;
 use StockAvailable;
 use Tools;
@@ -52,9 +53,12 @@ final class ProductSerializer
     {
         $id = (int) $id;
         self::ensurePricingContext();
+        ShopContext::pin();
 
         $context = Context::getContext();
-        $idLang = (int) $context->language->id;
+        // The SHOP's default language, not the visitor's: a drain triggered by a
+        // French shopper's page load must not index French names on an English shop.
+        $idLang = ShopContext::languageId();
 
         $product = new Product($id, true, $idLang);
         if (!Validate::isLoadedObject($product)) {
@@ -256,16 +260,11 @@ final class ProductSerializer
     }
 
     /**
-     * @return string ISO 4217 code for the shop's default currency
+     * @return string ISO 4217, the SHOP's default — never the ambient context's
      */
     private static function currencyIso()
     {
-        $context = Context::getContext();
-        if ($context->currency && $context->currency->iso_code) {
-            return strtoupper((string) $context->currency->iso_code);
-        }
-
-        return 'EUR';
+        return ShopContext::currencyIso();
     }
 
     /**

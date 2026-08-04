@@ -131,6 +131,12 @@
               {/if}
             </td>
           </tr>
+          {if $nitro_pending_reports > 0}
+            <tr>
+              <td>{l s='Orders to report' d='Modules.Nitrosearch.Admin'}</td>
+              <td>{$nitro_pending_reports|intval} <small class="text-muted">{l s='(sent in the background)' d='Modules.Nitrosearch.Admin'}</small></td>
+            </tr>
+          {/if}
           {if $nitro_items_total > 0}
             <tr>
               <td>{l s='Sent in total' d='Modules.Nitrosearch.Admin'}</td>
@@ -203,6 +209,33 @@
   <div class="alert alert-info">
     {l s='No scheduler? It still works. The module does a little sending after a page has already been shown to a shopper, so nobody ever waits for it. A first sync of a big catalogue just takes longer.' d='Modules.Nitrosearch.Admin'}
   </div>
+</div>
+{/if}
+
+{if $nitro_multistore || $nitro_other_currencies}
+<div class="panel">
+  <div class="panel-heading">
+    <i class="icon-info-circle"></i> {l s='What gets indexed' d='Modules.Nitrosearch.Admin'}
+  </div>
+  <p>
+    {l s='NitroSearch indexes one shop, in one language, at one currency. This shop is indexed in' d='Modules.Nitrosearch.Admin'}
+    <strong>{$nitro_currency|escape:'html':'UTF-8'}</strong>.
+  </p>
+  {if $nitro_other_currencies}
+    <div class="alert alert-info">
+      {l s='Your other active currencies are not indexed separately, so search shows every price in' d='Modules.Nitrosearch.Admin'}
+      <strong>{$nitro_currency|escape:'html':'UTF-8'}</strong>:
+      {foreach from=$nitro_other_currencies item=iso name=cur}{$iso|escape:'html':'UTF-8'}{if !$smarty.foreach.cur.last}, {/if}{/foreach}.
+    </div>
+  {/if}
+  {if $nitro_other_shops}
+    <div class="alert alert-warning">
+      <strong>{l s='Multistore is on, and only your default shop is indexed.' d='Modules.Nitrosearch.Admin'}</strong>
+      {l s='These shops are not:' d='Modules.Nitrosearch.Admin'}
+      {foreach from=$nitro_other_shops item=shop name=sh}{$shop|escape:'html':'UTF-8'}{if !$smarty.foreach.sh.last}, {/if}{/foreach}.
+      {l s='Their shoppers still get your theme’s own search. Connect them as separate NitroSearch stores if you need them indexed.' d='Modules.Nitrosearch.Admin'}
+    </div>
+  {/if}
 </div>
 {/if}
 
@@ -280,6 +313,71 @@
         <label for="nitro_badge_off">{l s='No' d='Admin.Global'}</label>
         <a class="slide-button btn"></a>
       </span>
+    </div>
+
+    <hr>
+    <h4>{l s='Appearance' d='Modules.Nitrosearch.Admin'}</h4>
+    <p class="help-block">
+      {l s='These change how the search panel looks on your storefront. Nothing here is sent to your shoppers as a preset name — the choices are resolved to plain style values before the page is built.' d='Modules.Nitrosearch.Admin'}
+    </p>
+
+    <div class="form-group">
+      <label>{l s='Density' d='Modules.Nitrosearch.Admin'}</label>
+      <select name="nitro_design_look" class="form-control fixed-width-xl">
+        <option value="roomy" {if $nitro_design_look == 'roomy'}selected{/if}>{l s='Roomy — bigger thumbnails, two-line names' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="compact" {if $nitro_design_look == 'compact'}selected{/if}>{l s='Compact — more results before scrolling' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="images" {if $nitro_design_look == 'images'}selected{/if}>{l s='Image-led — large pictures' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="text" {if $nitro_design_look == 'text'}selected{/if}>{l s='Text only — no thumbnails' d='Modules.Nitrosearch.Admin'}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Colours' d='Modules.Nitrosearch.Admin'}</label>
+      <select name="nitro_design_scheme" class="form-control fixed-width-xl">
+        <option value="light" {if $nitro_design_scheme == 'light'}selected{/if}>{l s='Light' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="dark" {if $nitro_design_scheme == 'dark'}selected{/if}>{l s='Dark' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="auto" {if $nitro_design_scheme == 'auto'}selected{/if}>{l s='Match the shopper’s device' d='Modules.Nitrosearch.Admin'}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Corners' d='Modules.Nitrosearch.Admin'}</label>
+      <select name="nitro_design_corners" class="form-control fixed-width-xl">
+        <option value="rounded" {if $nitro_design_corners == 'rounded'}selected{/if}>{l s='Rounded' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="soft" {if $nitro_design_corners == 'soft'}selected{/if}>{l s='Slightly rounded' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="square" {if $nitro_design_corners == 'square'}selected{/if}>{l s='Square' d='Modules.Nitrosearch.Admin'}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Accent colour' d='Modules.Nitrosearch.Admin'}</label>
+      <input type="text" name="nitro_design_accent" class="form-control fixed-width-lg"
+             value="{$nitro_design_accent|escape:'html':'UTF-8'}" placeholder="#2563eb">
+      <p class="help-block">{l s='A hex colour such as #2563eb. Leave empty to use the default.' d='Modules.Nitrosearch.Admin'}</p>
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Panel width' d='Modules.Nitrosearch.Admin'}</label>
+      <select name="nitro_design_width" class="form-control fixed-width-xl">
+        <option value="auto" {if $nitro_design_width == 'auto'}selected{/if}>{l s='Automatic' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="match" {if $nitro_design_width == 'match'}selected{/if}>{l s='Match the search box' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="wide" {if $nitro_design_width == 'wide'}selected{/if}>{l s='Wide' d='Modules.Nitrosearch.Admin'}</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Results in the dropdown' d='Modules.Nitrosearch.Admin'}</label>
+      <input type="number" name="nitro_design_per_page" class="form-control fixed-width-sm"
+             min="2" max="20" value="{$nitro_design_per_page|intval}">
+    </div>
+
+    <div class="form-group">
+      <label>{l s='Filters' d='Modules.Nitrosearch.Admin'}</label>
+      <select name="nitro_design_filters" class="form-control fixed-width-xl">
+        <option value="auto" {if $nitro_design_filters == 'auto'}selected{/if}>{l s='Automatic' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="top" {if $nitro_design_filters == 'top'}selected{/if}>{l s='Across the top' d='Modules.Nitrosearch.Admin'}</option>
+        <option value="off" {if $nitro_design_filters == 'off'}selected{/if}>{l s='Hidden' d='Modules.Nitrosearch.Admin'}</option>
+      </select>
     </div>
 
     <hr>

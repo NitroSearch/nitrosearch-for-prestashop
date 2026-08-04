@@ -214,6 +214,51 @@ final class Client
     }
 
     /**
+     * Report one search-attributed order.
+     *
+     * THE REAL ORDER ID NEVER LEAVES THE SHOP. It is hashed with the install id
+     * first, so the service receives an opaque reference that is stable for this
+     * shop — enough to deduplicate and to link a repeat report to the same order,
+     * and useless for identifying anything outside it. Nothing about the customer,
+     * the address, the payment or the rest of the basket is included.
+     *
+     * @param array<string, mixed> $report
+     *
+     * @return bool false when it should be retried later
+     */
+    public static function reportOrder(array $report)
+    {
+        if (!Settings::isConnected() || !Settings::get('SHARE_SEARCH_DATA', true)) {
+            return false;
+        }
+
+        $itemIds = array();
+        foreach ((array) (isset($report['item_ids']) ? $report['item_ids'] : array()) as $id) {
+            $itemIds[] = (string) $id;
+        }
+
+        $body = json_encode(array(
+            'order_ref' => hash('sha256', Settings::installId() . '|order|' . (int) $report['order_id']),
+            'value_cents' => (int) $report['value_cents'],
+            'currency' => (string) $report['currency'],
+            'occurred_at' => (string) $report['occurred_at'],
+            'item_ids' => array_values($itemIds),
+            'q' => (string) (isset($report['q']) ? $report['q'] : ''),
+        ));
+
+        $res = self::signed('POST', '/v1/orders', $body, 10);
+
+        // A 4xx is NOT retryable — the payload is wrong, or this shop is not
+        // entitled, and re-sending it forever would just be noise. Only a
+        // transport failure or a 5xx earns another attempt.
+        if (!$res['ok'] && $res['status'] >= 400 && $res['status'] < 500) {
+            return true;
+        }
+
+        return $res['ok'];
+    }
+
+    /**
      * Confirm that a requested full re-sync has STARTED.
      *
      * The token rides the signed BODY rather than the query string, because the

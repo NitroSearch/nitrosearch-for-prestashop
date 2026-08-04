@@ -78,6 +78,15 @@ final class Settings
         'SHOW_BADGE' => false,
         'SHARE_SEARCH_DATA' => true,
         'SELECTOR' => '',
+        // Appearance. Preset NAMES live here and in the settings screen; only
+        // resolved token values ever reach the widget (see Support\Design).
+        'DESIGN_LOOK' => 'roomy',
+        'DESIGN_SCHEME' => 'light',
+        'DESIGN_CORNERS' => 'rounded',
+        'DESIGN_ACCENT' => '',
+        'DESIGN_WIDTH' => 'auto',
+        'DESIGN_PER_PAGE' => 8,
+        'DESIGN_FILTERS' => 'auto',
         'LAST_BATCH_MS' => 0,
         'AVG_BATCH_MS' => 0,
         'SYNC_BATCHES_TOTAL' => 0,

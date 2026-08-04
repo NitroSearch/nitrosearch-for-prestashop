@@ -18,6 +18,7 @@ use CMS;
 use Context;
 use NitroSearch\AdapterKit\ItemBuilder;
 use NitroSearch\Settings;
+use NitroSearch\Support\ShopContext;
 use Tools;
 use Validate;
 
@@ -47,8 +48,9 @@ final class CmsSerializer
             return null;
         }
 
+        ShopContext::pin();
         $context = Context::getContext();
-        $idLang = (int) $context->language->id;
+        $idLang = ShopContext::languageId();
 
         $page = new CMS($id, $idLang);
         if (!Validate::isLoadedObject($page) || !(bool) $page->active) {
