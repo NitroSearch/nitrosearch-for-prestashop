@@ -168,7 +168,10 @@
       <button type="submit" name="submitNitroFullSync" class="btn btn-default">
         <i class="icon-repeat"></i> {l s='Re-send everything' d='Modules.Nitrosearch.Admin'}
       </button>
-      <button type="submit" name="submitNitroDisconnect" class="btn btn-default pull-right"
+      {* No pull-right: with four buttons in a form-inline it floats onto its own
+         line and reads as a separate, more prominent control than the ones it sits
+         under — which is the opposite of what a destructive action wants. *}
+      <button type="submit" name="submitNitroDisconnect" class="btn btn-default"
               onclick="return confirm('{l s='Disconnect this shop from NitroSearch? Your products and pages are not affected.' d='Modules.Nitrosearch.Admin' js=1}');">
         {l s='Disconnect' d='Modules.Nitrosearch.Admin'}
       </button>

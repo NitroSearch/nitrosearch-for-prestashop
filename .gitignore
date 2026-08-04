@@ -1,0 +1,7 @@
+# Build output. The installable ZIP is a release asset, not a tracked file:
+# it is reproducible from any tagged commit with ./bin/build-module.sh, and
+# committing binaries into the repo that distributes them by Release only
+# bloats every clone.
+/dist/
+
+.DS_Store
