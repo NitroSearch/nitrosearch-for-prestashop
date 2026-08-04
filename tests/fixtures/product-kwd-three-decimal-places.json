@@ -1,0 +1,33 @@
+{
+    "name": "product-kwd-three-decimal-places",
+    "why": "Kuwaiti dinar has three. 19.995 KWD is 19995 with an exponent of 3.",
+    "object_type": "product",
+    "wire": {
+        "id": 103,
+        "name": "Lamp",
+        "visible": true,
+        "price": 19995,
+        "currency": "KWD",
+        "price_exponent": 3
+    },
+    "expected_document": {
+        "id": "103",
+        "name": "Lamp",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 19995,
+        "price_max": 19995,
+        "currency": "KWD",
+        "price_exponent": 3,
+        "display_price": "KWD 19.995"
+    }
+}

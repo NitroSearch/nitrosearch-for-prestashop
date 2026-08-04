@@ -1,0 +1,33 @@
+{
+    "name": "product-usd-two-decimal-places",
+    "why": "The ordinary case. 19.99 USD is sent as 1999 with an exponent of 2.",
+    "object_type": "product",
+    "wire": {
+        "id": 101,
+        "name": "Kettle",
+        "visible": true,
+        "price": 1999,
+        "currency": "USD",
+        "price_exponent": 2
+    },
+    "expected_document": {
+        "id": "101",
+        "name": "Kettle",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 1999,
+        "price_max": 1999,
+        "currency": "USD",
+        "price_exponent": 2,
+        "display_price": "$19.99"
+    }
+}

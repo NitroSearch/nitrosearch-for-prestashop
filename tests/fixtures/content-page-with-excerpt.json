@@ -1,0 +1,32 @@
+{
+    "name": "content-page-with-excerpt",
+    "why": "Pages and posts are a different shape: excerpt and published_at instead of price and stock. The page BODY is never sent and never indexed.",
+    "object_type": "content",
+    "wire": {
+        "id": 201,
+        "object_type": "page",
+        "name": "Shipping & returns",
+        "visible": true,
+        "excerpt": "How long delivery takes and how to return an item.",
+        "published_at": 1750000000,
+        "categories": [
+            "Help",
+            "Help",
+            ""
+        ],
+        "permalink": "https://example.test/shipping"
+    },
+    "expected_document": {
+        "id": "201",
+        "object_type": "page",
+        "name": "Shipping & returns",
+        "excerpt": "How long delivery takes and how to return an item.",
+        "categories": [
+            "Help"
+        ],
+        "visible": true,
+        "permalink": "https://example.test/shipping",
+        "image": "",
+        "published_at": 1750000000
+    }
+}

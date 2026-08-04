@@ -1,0 +1,33 @@
+{
+    "name": "product-chf-two-decimal-places",
+    "why": "Swiss franc, two decimal places — included because its formatting differs from USD even though its exponent does not.",
+    "object_type": "product",
+    "wire": {
+        "id": 104,
+        "name": "Clock",
+        "visible": true,
+        "price": 4950,
+        "currency": "CHF",
+        "price_exponent": 2
+    },
+    "expected_document": {
+        "id": "104",
+        "name": "Clock",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 4950,
+        "price_max": 4950,
+        "currency": "CHF",
+        "price_exponent": 2,
+        "display_price": "CHF 49.50"
+    }
+}

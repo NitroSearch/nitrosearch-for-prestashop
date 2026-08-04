@@ -1,0 +1,95 @@
+{
+    "name": "product-variants-fold-into-one-object",
+    "why": "One product is ONE indexed object and ONE unit of quota however many variations it has. Their SKUs are searchable, their attributes become facets, and the indexed price becomes the range across parent and variants. A module that sends variants as separate top-level items breaks both the quota and the results a shopper sees.",
+    "object_type": "product",
+    "wire": {
+        "id": 107,
+        "name": "T-shirt",
+        "visible": true,
+        "sku": "TS",
+        "price": 1500,
+        "currency": "GBP",
+        "price_exponent": 2,
+        "attributes": {
+            "Colour": [
+                "Red"
+            ]
+        },
+        "variants": [
+            {
+                "id": 1071,
+                "sku": "TS-R-S",
+                "price": 1500,
+                "in_stock": true,
+                "attributes": {
+                    "Colour": [
+                        "Red"
+                    ],
+                    "Size": [
+                        "S"
+                    ]
+                }
+            },
+            {
+                "id": 1072,
+                "sku": "TS-B-L",
+                "price": 1800,
+                "in_stock": false,
+                "attributes": {
+                    "Colour": [
+                        "Blue"
+                    ],
+                    "Size": [
+                        "L"
+                    ]
+                }
+            }
+        ]
+    },
+    "expected_document": {
+        "id": "107",
+        "name": "T-shirt",
+        "description": "",
+        "sku": "TS",
+        "skus": [
+            "TS",
+            "TS-R-S",
+            "TS-B-L"
+        ],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 1500,
+        "price_max": 1800,
+        "currency": "GBP",
+        "price_exponent": 2,
+        "display_price": "£15.00",
+        "attr_colour": [
+            "Red",
+            "Blue"
+        ],
+        "attr_size": [
+            "S",
+            "L"
+        ],
+        "variants": [
+            {
+                "id": "1071",
+                "sku": "TS-R-S",
+                "price": 1500,
+                "in_stock": true
+            },
+            {
+                "id": "1072",
+                "sku": "TS-B-L",
+                "price": 1800,
+                "in_stock": false
+            }
+        ]
+    }
+}

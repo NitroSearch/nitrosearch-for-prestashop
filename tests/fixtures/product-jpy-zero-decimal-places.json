@@ -1,0 +1,33 @@
+{
+    "name": "product-jpy-zero-decimal-places",
+    "why": "Yen has no minor unit. 1000 JPY is 1000 with an exponent of 0 — sending 100000 \"to be safe\" indexes a product costing a hundred times too much.",
+    "object_type": "product",
+    "wire": {
+        "id": 102,
+        "name": "Teapot",
+        "visible": true,
+        "price": 1000,
+        "currency": "JPY",
+        "price_exponent": 0
+    },
+    "expected_document": {
+        "id": "102",
+        "name": "Teapot",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 1000,
+        "price_max": 1000,
+        "currency": "JPY",
+        "price_exponent": 0,
+        "display_price": "¥1,000"
+    }
+}

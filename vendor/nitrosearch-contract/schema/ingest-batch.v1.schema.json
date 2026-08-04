@@ -1,0 +1,238 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://nitrosearch.io/schema/ingest-batch.v1.schema.json",
+    "title": "NitroSearch ingest batch (v1)",
+    "description": "The request body of POST /v1/ingest/batch. A merchant module emits this; the search backend maps it to its canonical model and indexes the result. Generated from the validation rules the endpoint actually enforces — if this schema and the endpoint ever disagree, that is a bug in the generator, not a documentation lag.",
+    "type": "object",
+    "required": [
+        "items"
+    ],
+    "additionalProperties": true,
+    "properties": {
+        "items": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "description": "The batch. Items are applied independently: one malformed item is recorded and skipped, it does not reject the batch.",
+            "items": {
+                "$ref": "#/$defs/item"
+            }
+        }
+    },
+    "$defs": {
+        "item": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "additionalProperties": true,
+            "properties": {
+                "op": {
+                    "enum": [
+                        "upsert",
+                        "delete",
+                        null
+                    ],
+                    "description": "What to do with this object. Absent means \"upsert\"."
+                },
+                "version": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Your own monotonic clock for this object — milliseconds since epoch is the convention. Last write wins: an item whose version is not greater than the one already indexed is skipped as stale. Send a real, increasing value, or out-of-order delivery will silently overwrite newer data with older."
+                },
+                "data": {
+                    "$ref": "#/$defs/data"
+                }
+            }
+        },
+        "data": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "additionalProperties": true,
+            "properties": {
+                "id": {
+                    "type": [
+                        "string",
+                        "integer"
+                    ],
+                    "description": "The object id on your platform. Required. Sent back verbatim in the batch response. It is canonicalised to an integer before indexing, so \"07\" and 7 are the same object — do not rely on a leading zero to distinguish two products.",
+                    "x-applies-to": "both",
+                    "x-validated": true
+                },
+                "object_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "What kind of object this is: \"product\", \"page\" or \"post\". Absent means product. An unrecognised but well-formed value is accepted and treated as generic content rather than rejected, so a newer module keeps working against an older backend. Max 20 characters.",
+                    "x-applies-to": "both",
+                    "maxLength": 20,
+                    "x-validated": true
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "The title shown in search results.",
+                    "x-applies-to": "both"
+                },
+                "visible": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "description": "Whether shoppers may find this. FAILS CLOSED: anything absent or not explicitly true is unreachable through the public search key. Send true for published, purchasable items only.",
+                    "x-applies-to": "both"
+                },
+                "permalink": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Absolute URL of the item. Only http and https survive; any other scheme is dropped to an empty string rather than indexed.",
+                    "x-applies-to": "both"
+                },
+                "image": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Absolute URL of the thumbnail. Same scheme filtering as permalink.",
+                    "x-applies-to": "both"
+                },
+                "categories": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "description": "Category names as a flat list of strings. Note the asymmetry, which is inherited rather than designed: for products the list is taken verbatim (duplicates and blanks preserved); for pages and posts it is filtered to scalars, blanks dropped, and de-duplicated. Send a clean list and the difference cannot affect you.",
+                    "x-applies-to": "both"
+                },
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Product description, indexed for search.",
+                    "x-applies-to": "product"
+                },
+                "sku": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "The parent SKU. Variant SKUs are unioned into the same searchable field, so a shopper can search any variation code and find the product.",
+                    "x-applies-to": "product"
+                },
+                "brand": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Brand name, indexed and facetable.",
+                    "x-applies-to": "product"
+                },
+                "in_stock": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "description": "Stock status, facetable. Absent is treated as out of stock.",
+                    "x-applies-to": "product"
+                },
+                "on_sale": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ],
+                    "description": "Whether the product is currently discounted, facetable.",
+                    "x-applies-to": "product"
+                },
+                "popularity_score": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "A ranking hint — typically units sold. Higher sorts earlier when relevance ties. Absent is 0.",
+                    "x-applies-to": "product"
+                },
+                "sales_rank": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "DEPRECATED alias for popularity_score, still honoured because the deployed fleet cannot be force-upgraded. New modules must send popularity_score.",
+                    "x-applies-to": "product"
+                },
+                "price": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Price in INTEGER MINOR UNITS — 19.99 USD is 1999, never 19.99. A decimal, a float or a negative value is rejected and the item is not indexed; money is never inferred. With variants, the indexed range is the minimum and maximum across the parent and every variant.",
+                    "x-applies-to": "product"
+                },
+                "currency": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "ISO 4217 code, exactly three letters (e.g. \"USD\", \"JPY\", \"KWD\"). Upper-cased on arrival.",
+                    "x-applies-to": "product",
+                    "maxLength": 3,
+                    "minLength": 3,
+                    "pattern": "^[A-Za-z]+$",
+                    "x-validated": true
+                },
+                "price_exponent": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "How many decimal places your minor units carry: 2 for USD/EUR/GBP, 0 for JPY, 3 for KWD. DECLARE IT. Omitting it means \"this producer scaled by 100 whatever the currency\", which is what pre-1.x modules did, and reading such a payload as true minor units renders a 1,000 yen product as 100,000 yen. Range 0-4.",
+                    "x-applies-to": "product",
+                    "minimum": 0,
+                    "maximum": 4,
+                    "x-validated": true
+                },
+                "variants": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "description": "Variations, as objects with id, sku, price (integer minor units) and in_stock. NEVER send variants as separate top-level items: one product is one indexed object and one unit of the merchant's quota, however many variations it has. Their SKUs, prices and attributes are folded into the parent.",
+                    "x-applies-to": "product"
+                },
+                "attributes": {
+                    "type": [
+                        "object",
+                        "null"
+                    ],
+                    "description": "Facetable attributes as a map of name to values, e.g. {\"Colour\": [\"Red\", \"Blue\"]}. Attribute NAMES are normalised to a slug, so \"Colour Way\", \"colour-way\" and \"colour_way\" become one facet. Attribute VALUES are NOT normalised — \"Red\" and \"red\" stay two distinct facet values, so normalise those yourself. Values from the parent and every variant are unioned and de-duplicated.",
+                    "x-applies-to": "product"
+                },
+                "excerpt": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "A short summary for pages and posts. Capped at 1000 characters (characters, not bytes). The page body itself is never indexed.",
+                    "x-applies-to": "content"
+                },
+                "published_at": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ],
+                    "description": "Publication time as a Unix timestamp in seconds. Negative values are clamped to 0.",
+                    "x-applies-to": "content"
+                }
+            }
+        }
+    }
+}

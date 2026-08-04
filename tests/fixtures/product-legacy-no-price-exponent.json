@@ -1,0 +1,32 @@
+{
+    "name": "product-legacy-no-price-exponent",
+    "why": "A module that omits price_exponent is treated as a pre-1.x producer that scaled by 100 whatever the currency. This is compatibility for the deployed fleet, NOT a default to rely on. Always declare the exponent.",
+    "object_type": "product",
+    "wire": {
+        "id": 105,
+        "name": "Legacy item",
+        "visible": true,
+        "price": 2500,
+        "currency": "USD"
+    },
+    "expected_document": {
+        "id": "105",
+        "name": "Legacy item",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 2500,
+        "price_max": 2500,
+        "currency": "USD",
+        "price_exponent": 2,
+        "display_price": "$25.00"
+    }
+}

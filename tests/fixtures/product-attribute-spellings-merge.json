@@ -1,0 +1,79 @@
+{
+    "name": "product-attribute-spellings-merge",
+    "why": "Attribute NAMES are normalised to a slug before they become facets, so two spellings of one attribute merge instead of producing two half-populated filters. \"Colour Way\", \"colour-way\" and \"colour_way\" are all the same facet. Note the limit this does NOT cross: only the name is normalised, never the VALUE — \"Red\" and \"red\" remain two distinct facet values, so normalise your values yourself.",
+    "object_type": "product",
+    "wire": {
+        "id": 110,
+        "name": "Scarf",
+        "visible": true,
+        "attributes": {
+            "Colour Way": [
+                "Red"
+            ]
+        },
+        "variants": [
+            {
+                "id": 1101,
+                "sku": "SC-1",
+                "price": 900,
+                "attributes": {
+                    "colour-way": [
+                        "Blue"
+                    ]
+                }
+            },
+            {
+                "id": 1102,
+                "sku": "SC-2",
+                "price": 900,
+                "attributes": {
+                    "colour_way": [
+                        "Green"
+                    ]
+                }
+            }
+        ]
+    },
+    "expected_document": {
+        "id": "110",
+        "name": "Scarf",
+        "description": "",
+        "sku": "",
+        "skus": [
+            "SC-1",
+            "SC-2"
+        ],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 900,
+        "price_max": 900,
+        "currency": "",
+        "price_exponent": 2,
+        "display_price": "9.00",
+        "attr_colour_way": [
+            "Red",
+            "Blue",
+            "Green"
+        ],
+        "variants": [
+            {
+                "id": "1101",
+                "sku": "SC-1",
+                "price": 900,
+                "in_stock": false
+            },
+            {
+                "id": "1102",
+                "sku": "SC-2",
+                "price": 900,
+                "in_stock": false
+            }
+        ]
+    }
+}

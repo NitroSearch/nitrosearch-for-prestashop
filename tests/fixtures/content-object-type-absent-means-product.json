@@ -1,0 +1,33 @@
+{
+    "name": "content-object-type-absent-means-product",
+    "why": "An item with no object_type is a product. A module that indexes pages must say so explicitly on every page item.",
+    "object_type": "product",
+    "wire": {
+        "id": 202,
+        "name": "Untyped",
+        "visible": true,
+        "price": 100,
+        "currency": "GBP",
+        "price_exponent": 2
+    },
+    "expected_document": {
+        "id": "202",
+        "name": "Untyped",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 100,
+        "price_max": 100,
+        "currency": "GBP",
+        "price_exponent": 2,
+        "display_price": "£1.00"
+    }
+}

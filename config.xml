@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>nitrosearch</name>
+    <displayName><![CDATA[NitroSearch]]></displayName>
+    <version><![CDATA[1.0.0]]></version>
+    <description><![CDATA[Fast, typo-tolerant search for your shop. Results appear as your shoppers type.]]></description>
+    <author><![CDATA[WebDeviAnt Studios]]></author>
+    <tab><![CDATA[search_filter]]></tab>
+    <confirmUninstall><![CDATA[This will disconnect the shop and delete the local sync queue. Your products are not affected.]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>0</need_instance>
+    <limited_countries></limited_countries>
+</module>

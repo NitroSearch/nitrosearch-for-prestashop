@@ -1,0 +1,27 @@
+{
+    "name": "product-unsafe-url-is-dropped",
+    "why": "Only http and https survive. Any other scheme becomes an empty string rather than being indexed, so a compromised feed cannot put a javascript: URL in front of a shopper.",
+    "object_type": "product",
+    "wire": {
+        "id": 109,
+        "name": "Odd links",
+        "visible": true,
+        "permalink": "javascript:alert(1)",
+        "image": "https://example.test/i.png"
+    },
+    "expected_document": {
+        "id": "109",
+        "name": "Odd links",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "https://example.test/i.png"
+    }
+}

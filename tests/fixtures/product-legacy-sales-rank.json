@@ -1,0 +1,26 @@
+{
+    "name": "product-legacy-sales-rank",
+    "why": "sales_rank is the deprecated spelling of popularity_score and is still honoured. New modules must send popularity_score.",
+    "object_type": "product",
+    "wire": {
+        "id": 106,
+        "name": "Popular item",
+        "visible": true,
+        "sales_rank": 42
+    },
+    "expected_document": {
+        "id": "106",
+        "name": "Popular item",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": true,
+        "popularity_score": 42,
+        "permalink": "",
+        "image": ""
+    }
+}

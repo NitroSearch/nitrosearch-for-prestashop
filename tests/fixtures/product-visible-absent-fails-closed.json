@@ -1,0 +1,32 @@
+{
+    "name": "product-visible-absent-fails-closed",
+    "why": "Visibility fails closed. An item that does not explicitly say visible:true is indexed but unreachable through the public search key. This is the safe default and the most common cause of \"my products are not appearing\".",
+    "object_type": "product",
+    "wire": {
+        "id": 108,
+        "name": "Draft product",
+        "price": 500,
+        "currency": "GBP",
+        "price_exponent": 2
+    },
+    "expected_document": {
+        "id": "108",
+        "name": "Draft product",
+        "description": "",
+        "sku": "",
+        "skus": [],
+        "brand": "",
+        "categories": [],
+        "in_stock": false,
+        "on_sale": false,
+        "visible": false,
+        "popularity_score": 0,
+        "permalink": "",
+        "image": "",
+        "price": 500,
+        "price_max": 500,
+        "currency": "GBP",
+        "price_exponent": 2,
+        "display_price": "£5.00"
+    }
+}
