@@ -6,6 +6,8 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-08-04
+
 ### Added
 
 - First release. Connects a PrestaShop shop to NitroSearch, keeps its catalogue in sync, and puts
@@ -43,3 +45,6 @@ All notable changes to this module are documented here. The format follows
   - **Prices are sent as the shop displays them**, tax included or excluded per your own settings,
     in integer minor units with the currency's own exponent — so yen and dinar are correct rather
     than scaled by a hundred out of habit.
+
+[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/tag/v1.0.0
