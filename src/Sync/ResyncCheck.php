@@ -43,10 +43,33 @@ final class ResyncCheck
      */
     const INTERVAL = 300;
 
+    /**
+     * Seconds between search-key REFRESHES — a different clock, and a different job.
+     *
+     * ⚠ THE POLL CANNOT RENEW THE KEY, and for a long time this class behaved as
+     * though it could. `/v1/status` does not carry a key; only `/v1/search-key`
+     * does. The fetch below was gated on the shop holding NO key, which is a
+     * backfill, not a renewal — and an EXPIRED key is still a non-empty string, so
+     * the gate never fired for the one shop that needed it. A shop that connected
+     * and was then simply used would find its storefront search returning nothing a
+     * year later, with the Configure screen still reporting a healthy connection.
+     *
+     * A day, against a key lifetime measured in months, so a shop can miss hundreds
+     * of consecutive refreshes and still be well inside the margin.
+     */
+    const REFRESH_INTERVAL = 86400;
+
     public static function maybeRun()
     {
         if (!Settings::isConnected()) {
             return;
+        }
+
+        // The key refresh is decided FIRST and on its own clock, so that a status
+        // endpoint which is slow, failing or simply not yet due cannot suppress the
+        // one job whose absence silently kills storefront search.
+        if (self::refreshDue()) {
+            self::refreshSearchKey();
         }
 
         if (time() - (int) Settings::get('STATUS_CHECKED_AT', 0) < self::INTERVAL) {
@@ -90,6 +113,75 @@ final class ResyncCheck
         }
 
         self::handle($token);
+    }
+
+    /**
+     * Whether the daily search-key refresh is due. One cached settings read.
+     *
+     * @return bool
+     */
+    public static function refreshDue()
+    {
+        return (time() - (int) Settings::get('CONFIG_REFRESHED_AT', 0)) >= self::REFRESH_INTERVAL;
+    }
+
+    /**
+     * Whether anything at all is due — the poll or the refresh.
+     *
+     * EXISTS FOR THE CALLER'S BENEFIT. `Drain::tick()` has to decide whether to
+     * register a deferred run BEFORE doing any work, and asking must not itself
+     * cost a request.
+     *
+     * @return bool
+     */
+    public static function isDue()
+    {
+        if (!Settings::isConnected()) {
+            return false;
+        }
+
+        if (time() - (int) Settings::get('STATUS_CHECKED_AT', 0) >= self::INTERVAL) {
+            return true;
+        }
+
+        return self::refreshDue();
+    }
+
+    /**
+     * Re-fetch the scoped search key, whether or not one is already held.
+     *
+     * THIS IS THE JOB THE POLL CANNOT DO. The key the widget searches with carries
+     * a baked-in expiry and `/v1/status` never carries a replacement, so the only
+     * way to get a fresh one is to ask `/v1/search-key` on a clock.
+     *
+     * ⚠ THE CLOCK IS STAMPED BEFORE THE ELIGIBILITY TEST, and the ordering is
+     * load-bearing. Stamping only on the eligible path leaves a not-yet-verified
+     * shop permanently "refresh due", which makes `isDue()` permanently true and has
+     * the page-load fallback registering a deferred run on every tick forever for a
+     * shop with nothing to do. Stamping unconditionally costs an ineligible shop
+     * nothing: the five-minute poll below still backfills a missing key the moment
+     * verification lands, so nothing waits a day for something it needs sooner.
+     *
+     * FAILURE IS SAFE. `Client::fetchSearchKey()` refuses to overwrite a stored key
+     * with a response that did not decode to the expected shape, so a bad answer
+     * leaves the working key in place and the next day's attempt is soon enough.
+     */
+    private static function refreshSearchKey()
+    {
+        Settings::update(array('CONFIG_REFRESHED_AT' => time()));
+
+        // Belt and braces: the stored `verified` flag can lag reality on a shop
+        // verified out of band, so a shop that HOLDS a key is refresh-eligible
+        // whatever the flag says. The service answers 409 harmlessly otherwise.
+        if (!Settings::get('VERIFIED') && (string) Settings::get('SCOPED_SEARCH_KEY') === '') {
+            return;
+        }
+
+        try {
+            Client::fetchSearchKey();
+        } catch (\Exception $e) {
+            // Housekeeping must never take the drain down with it.
+        }
     }
 
     /**

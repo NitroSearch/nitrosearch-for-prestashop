@@ -121,8 +121,8 @@ final class Drain
      * The no-cron fallback: at most one batch, after the shopper's page is gone.
      *
      * Called from a front-office hook. It returns immediately unless the interval
-     * has elapsed and there is work, then defers the actual send to shutdown so
-     * nothing is added to the page's time to first byte.
+     * has elapsed and there is something to do, then defers the actual work to
+     * shutdown so nothing is added to the page's time to first byte.
      */
     public static function tick()
     {
@@ -139,7 +139,18 @@ final class Drain
         // loads do not all decide it is their turn.
         Settings::update(array('DRAIN_RAN_AT' => time()));
 
-        if (Outbox::pendingCount() <= 0) {
+        // ⚠ A DUE HEARTBEAT IS A SECOND, INDEPENDENT REASON TO RUN, and collapsing
+        // the two conditions is the bug this arrangement exists to prevent. An empty
+        // outbox is not an idle shop worth skipping — it is the steady state of every
+        // healthy catalogue, and precisely the shop whose scoped search key quietly
+        // expires. `Drain::run()` calls the heartbeat unconditionally, so a shop with
+        // working cron was always covered; gating it here meant the shops that never
+        // set cron up — the whole reason this fallback exists — were the only ones
+        // that never renewed a key.
+        //
+        // `isDue()` is one already-cached settings read, so asking costs nothing on
+        // the overwhelming majority of page views where the answer is no.
+        if (Outbox::pendingCount() <= 0 && !ResyncCheck::isDue()) {
             return;
         }
 

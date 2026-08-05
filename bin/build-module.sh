@@ -59,6 +59,19 @@ else
   printf '\033[33mwarn\033[0m  php not on PATH — skipping the lint pass\n'
 fi
 
+# ── The config blob must not be able to break out of its own <script> ────────
+#
+# A no-op escape shipped in 1.0.0 and 1.1.0 — `str_replace('<', '<', …)`, which
+# reads exactly like a working one. Unlike the lint above this has no `command
+# -v` fallback: a build host without the checker does not get to skip it, because
+# skipping it is how the defect shipped in the first place.
+for guard in check-script-escaping check-heartbeat; do
+  "$ROOT/bin/$guard.sh" --self-test >/dev/null \
+    || die "$guard.sh failed its own self-test — fix the guard before trusting the build"
+  "$ROOT/bin/$guard.sh" \
+    || die "$guard.sh refused this tree (see above)"
+done
+
 # ── Stage exactly what ships ─────────────────────────────────────────────────
 #
 # An allowlist, not an ignore list. A new dev-only directory added later is then

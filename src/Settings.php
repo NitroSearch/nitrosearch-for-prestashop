@@ -67,6 +67,10 @@ final class Settings
         'LAST_SYNC' => '',
         'LAST_ERROR' => '',
         'STATUS_CHECKED_AT' => 0,
+        // The search-key refresh's own clock, separate from the poll's. Two jobs on
+        // two intervals: `/v1/status` cannot deliver a key, so a shop that only ever
+        // polls holds the key it was issued at onboarding until it expires.
+        'CONFIG_REFRESHED_AT' => 0,
         'RESYNC_TOKEN_DONE' => '',
         'INDEX_CMS' => true,
         'RESULTS_TAKEOVER' => true,

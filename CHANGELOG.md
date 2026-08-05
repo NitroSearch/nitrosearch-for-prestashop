@@ -6,6 +6,38 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-08-05
+
+### Added
+
+- **Your shop now keeps its search key fresh on its own.** The key your storefront searches with has
+  a lifetime, and your shop fetches a new one once a day, long before the old one runs out.
+
+  Previously it only ever asked for a key when it had none at all — so a shop that connected and was
+  then simply used normally would, about a year later, find storefront search returning nothing.
+  There was no error, and the Configure screen still reported a healthy connection. If your shop has
+  been connected for a while, this update is what stops that happening.
+
+  Shops without a scheduled sync are covered too: the check now also runs on the occasional
+  storefront page view that already keeps the sync moving. It has its own daily clock and a short
+  timeout, so it cannot slow a page down or delay a sync.
+
+### Fixed
+
+- **The storefront configuration is now properly escaped where it is written into the page.** The
+  widget is set up by a small block of data placed directly in your shop's HTML. The one
+  free-text value that reaches it — the search-box selector, if you have set one in the module's
+  settings — was not being escaped, so a selector containing a closing script tag could have ended
+  the block early and had whatever followed it treated as part of the page. The escaping was in
+  place but had no effect: it replaced a character with itself. It is now done by PHP's own
+  encoder, and the build refuses to produce an archive if it is ever missing again.
+
+  Nothing you have configured needs changing, and the widget behaves exactly as before.
+
+- **Requests no longer emit a deprecation notice on PHP 8.5.** The module closed each network
+  handle explicitly, which has done nothing since PHP 8.0 and is deprecated as of 8.5. On a shop
+  with error display switched on, the notice could be printed into the front office's own markup.
+
 ## [1.1.0] — 2026-08-04
 
 ### Added
@@ -70,6 +102,7 @@ All notable changes to this module are documented here. The format follows
     in integer minor units with the currency's own exponent — so yen and dinar are correct rather
     than scaled by a hundred out of habit.
 
-[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/tag/v1.0.0

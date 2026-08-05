@@ -50,7 +50,7 @@ class NitroSearch extends Module
     {
         $this->name = 'nitrosearch';
         $this->tab = 'search_filter';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'WebDeviAnt Studios';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.7.6.0', 'max' => _PS_VERSION_);
@@ -421,16 +421,26 @@ class NitroSearch extends Module
         // `cart` here overrides that, and is only wanted by a shop that has
         // genuinely moved its cart endpoint.
 
-        $json = json_encode($config, JSON_UNESCAPED_SLASHES);
+        // `JSON_HEX_TAG` IS THE SECURITY-RELEVANT FLAG. It escapes every `<` and `>`
+        // in the encoded output to `<` and `>`, so a `</script>` reaching
+        // this config cannot close the block early and start executing markup. The
+        // browser decodes them back to the same characters, so nothing downstream
+        // sees a difference.
+        //
+        // Nothing we put in here should contain one — but the merchant-supplied
+        // selector reaches this function as free text, and "should not" is not a
+        // security property.
+        //
+        // IT IS A FLAG RATHER THAN A `str_replace` BECAUSE THIS LINE WAS ONE, AND IT
+        // WAS A NO-OP. The needle and the replacement were both a bare `<` — two
+        // byte-identical one-character strings — so it compiled, ran, escaped
+        // nothing, and read exactly like a version that worked. It shipped in 1.0.0
+        // and 1.1.0 underneath a comment claiming the protection was there. A
+        // reviewer cannot see the difference between the two forms; the engine can.
+        $json = json_encode($config, JSON_HEX_TAG | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
             return '';
         }
-
-        // `</script>` inside a JSON string would close this block early — the
-        // classic inline-JSON escape. Nothing in the config should contain it, but
-        // the shop's own name and a merchant-supplied selector both reach here, and
-        // "should not" is not a security property.
-        $json = str_replace('<', '<', $json);
 
         return '<script>window.NitroSearchConfig=' . $json . ';</script>' . "\n"
             . '<script src="' . htmlspecialchars($loaderUrl, ENT_QUOTES, 'UTF-8') . '" defer></script>' . "\n"
