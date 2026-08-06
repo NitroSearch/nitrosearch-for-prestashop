@@ -1,0 +1,64 @@
+name: Tests
+
+# This module had NO continuous integration and no test runner at all until now.
+# `tests/fixtures/` had held twelve conformance cases since the module was
+# written, and CONTRIBUTING.md had said "run them in CI" for just as long —
+# nothing ran them, because there was nothing to run them with. Both defects
+# fixed in 1.2.0 were in exactly that area: an inline-config escape that was a
+# no-op in two shipped releases, and a scoped search key that was never renewed.
+#
+# WHAT THIS CAN AND CANNOT SEE. It runs the pure, framework-free parts — the HMAC
+# canonicalisation, the proof-of-control hash, the vendored currency exponent
+# table. It cannot boot PrestaShop, so hooks, the outbox and the drain are not
+# covered here and the honest verification for those is still a real shop
+# installed from the built ZIP. Saying so is the point: a green tick that is read
+# as "the module works" is worse than no tick.
+#
+# PHP VERSIONS ARE A MATRIX because merchants are. PrestaShop 8 runs on 8.1
+# through 8.3 depending on the host, and this module ships to whatever the
+# merchant already has.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.2', '8.3']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      # Lint everything that ships, before anything else. A parse error in a file
+      # a merchant uploads is a fatal on the first request that autoloads it, and
+      # there is no build step here to catch one.
+      - name: Lint every PHP file that ships
+        run: |
+          set -euo pipefail
+          find src controllers vendor -name '*.php' -print0 \
+            | xargs -0 -n1 -P4 php -l > /dev/null
+          php -l nitrosearch.php > /dev/null
+          echo "every PHP file parses"
+
+      - name: Tests
+        run: php tests/run.php
+
+      # The build runs its own self-testing guards, so this also proves those
+      # still discriminate — and that the ZIP can actually be produced.
+      - name: Build the module
+        run: ./bin/build-module.sh

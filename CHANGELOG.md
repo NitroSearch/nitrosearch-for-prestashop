@@ -6,6 +6,17 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- **The module now has a test suite, and it runs on every change.** The conformance fixtures under
+  `tests/` had been in this repository since the module was written, describing exactly how prices,
+  currencies and visibility must behave — and nothing ever ran them, because there was no runner and
+  no CI. Both defects fixed in 1.2.0 were in that area.
+
+  `php tests/run.php` now runs them, `./bin/build-module.sh` runs it before packaging, and CI runs
+  it on PHP 8.1, 8.2 and 8.3. Nothing about the module a merchant installs changes — no test
+  material is in the archive.
+
 ## [1.2.0] — 2026-08-05
 
 ### Added
