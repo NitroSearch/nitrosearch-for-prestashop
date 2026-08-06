@@ -65,12 +65,36 @@ fi
 # reads exactly like a working one. Unlike the lint above this has no `command
 # -v` fallback: a build host without the checker does not get to skip it, because
 # skipping it is how the defect shipped in the first place.
-for guard in check-script-escaping check-heartbeat; do
-  "$ROOT/bin/$guard.sh" --self-test >/dev/null \
-    || die "$guard.sh failed its own self-test — fix the guard before trusting the build"
-  "$ROOT/bin/$guard.sh" \
-    || die "$guard.sh refused this tree (see above)"
+# THE LIST IS DERIVED, NOT WRITTEN DOWN. It used to name two guards, and a third
+# added beside them would have sat in bin/ running on nobody's machine while the
+# build printed its guard section and passed.
+_guards_run=0
+for guard in "$ROOT"/bin/check-*.sh; do
+  [ -f "$guard" ] || continue
+  _guards_run=$((_guards_run + 1))
+  "$guard" --self-test >/dev/null \
+    || die "$(basename "$guard") failed its own self-test — fix the guard before trusting the build"
+  "$guard" \
+    || die "$(basename "$guard") refused this tree (see above)"
 done
+
+# A loop over nothing passes. If the glob stops matching, stop rather than
+# quietly package an ungated tree.
+[ "$_guards_run" -ge 2 ] \
+  || die "only ${_guards_run} guard(s) ran — bin/check-*.sh matched less than expected, so this build is not gated"
+
+# ── The test suite, before anything is packaged ──────────────────────────────
+#
+# The conformance fixtures sat in tests/ unrun for the module's whole life
+# because there was nothing to run them with. Now there is, so the build runs
+# them: a module that cannot reproduce the shared HMAC vector cannot talk to the
+# service at all, and finding that out at package time beats finding it out as a
+# 401 on a merchant's shop.
+if command -v php >/dev/null 2>&1; then
+  php "$ROOT/tests/run.php" || die "the test suite refused this tree (see above)"
+else
+  die "php is not on PATH — refusing to build untested"
+fi
 
 # ── Stage exactly what ships ─────────────────────────────────────────────────
 #
