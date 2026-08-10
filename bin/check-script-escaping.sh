@@ -72,6 +72,19 @@ code_of() {
   sed -e 's://.*::' -e 's:#.*::' -e 's:^[[:space:]]*\*.*::' "$1" 2>/dev/null
 }
 
+# ⚠ NEVER `code_of ... | grep -q`. This repo already learned the rule in
+# `bin/build-module.sh`, where the archive listing is read into a variable
+# precisely because `unzip -Z1 … | grep -q …` reports failure when it MATCHES:
+# `grep -q` exits on the first hit, the producer takes SIGPIPE and exits 141, and
+# `pipefail` returns that 141 as the pipeline's status. The lesson was written
+# down there and this file kept the construct anyway.
+#
+# Here it fails in the more dangerous direction. The selector below reads
+# `... || continue`, so a producer killed by SIGPIPE means "this file emits no
+# <script>" and the file is SKIPPED — quietly narrowing the scan to whichever
+# files won a race against the pipe buffer, while still reporting a clean pass.
+qgrep() { grep -c "$@" >/dev/null; }
+
 # ── 1. Inline JSON must be tag-escaped by the engine ─────────────────────────
 check_hex_tag() {
   local root="$1" file call
@@ -80,7 +93,7 @@ check_hex_tag() {
   while IFS= read -r file; do
     # Only files that actually write a <script> into a page. Everything else uses
     # json_encode for HTTP bodies, where escaping tags would be pointless.
-    code_of "$file" | grep -q '<script' || continue
+    code_of "$file" | qgrep -F '<script' || continue
 
     # ⚠ THE UNIT IS THE CALL, NOT THE LINE. Matching a single line failed a
     # perfectly correct call the moment it was wrapped across lines — the flag
