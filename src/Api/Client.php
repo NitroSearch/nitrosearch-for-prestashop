@@ -220,6 +220,20 @@ final class Client
     }
 
     /**
+     * HTTP statuses that mean "come back and ask again", as opposed to "this is
+     * the answer".
+     *
+     * Listed rather than expressed as a range because the range is the mistake
+     * this constant exists to correct — see {@see reportOrder()}. Everything from
+     * 500 up is retryable too, and so is a transport failure, which has no status
+     * at all; neither is a single code, so both live in
+     * {@see isOrderRetryable()} instead of here.
+     *
+     * @var array<int, int>
+     */
+    const ORDER_RETRY_CODES = array(401, 408, 409, 423, 425, 429);
+
+    /**
      * Report one search-attributed order.
      *
      * THE REAL ORDER ID NEVER LEAVES THE SHOP. It is hashed with the install id
@@ -228,14 +242,75 @@ final class Client
      * and useless for identifying anything outside it. Nothing about the customer,
      * the address, the payment or the rest of the basket is included.
      *
+     * ────────────────────────────────────────────────────────────────────────
+     * THREE ANSWERS USED TO DESTROY AN ORDER OUTRIGHT (fixed 2026-08-10).
+     *
+     * Until this change the last thing this method did was treat EVERY 4xx as
+     * final — "the payload is wrong, or this shop is not entitled" — and report
+     * it to the caller as handled, which deleted the queued row. That reasoning
+     * holds for 400 and 422 and does not hold for three answers the service
+     * actually gives:
+     *
+     *   429 — the orders endpoint accepts a bounded number of reports per minute
+     *         per shop. A shop bursting past that line lost EVERY order over it,
+     *         so the busiest hour of the year reported the least revenue — and
+     *         that is the hour a merchant reads when deciding whether search is
+     *         worth paying for. This is the one that costs real money.
+     *   409 — the shop is not verified YET. Ordinary state during onboarding,
+     *         usually over within minutes, and every order placed inside that
+     *         window was thrown away.
+     *   423 — the account is suspended. Also a state shops come back from, e.g.
+     *         after a card is replaced.
+     *
+     * Each cost one order permanently, with nothing recorded anywhere: the row
+     * was deleted, the figure was simply lower, and "the number is low" was
+     * indistinguishable from "nobody searched".
+     *
+     * SO THE ANSWER IS NOW A TRI-STATE the caller acts on
+     * ({@see \NitroSearch\Sync\OrderAttribution::flush()}):
+     *
+     *   done  → any 2xx, including a 2xx that says the report was not counted;
+     *           and every 4xx not listed in ORDER_RETRY_CODES — 400/422 (a
+     *           payload that is wrong now will be just as wrong in an hour),
+     *           403 (this shop may not report), 404 (a service older than the
+     *           endpoint), 410. Retrying these spends the shop's own heartbeat
+     *           to be told the same thing again.
+     *   retry → 401, 408, 409, 423, 425, 429, any 5xx, and a transport failure,
+     *           which arrives here as status 0 and means nothing whatsoever is
+     *           known about whether the order was recorded.
+     *
+     * 401 IS RETRYABLE HERE AND WOULD NOT BE ON A CALLER THAT REUSED HEADERS.
+     * Hmac::headers() is built fresh inside signed() on every attempt, nonce
+     * included, so the next attempt is a genuinely different signed request
+     * rather than a replay of the one that was just refused.
+     *
+     * IT NEVER DERIVES `occurred_at`. The timestamp is frozen when the order is
+     * validated and re-sent byte-identical on every attempt; the service
+     * deduplicates on (shop, order reference, occurred_at), so a timestamp
+     * regenerated at send time would turn each retry into a SECOND conversion
+     * row for one order and OVERSTATE the shop's revenue — the opposite failure
+     * to the one being fixed, and the worse of the two. A report that reaches
+     * here without one is refused outright rather than stamped on the way out.
+     *
      * @param array<string, mixed> $report
      *
-     * @return bool false when it should be retried later
+     * @return array{done: bool, retry: bool, status: int, error: string}
      */
     public static function reportOrder(array $report)
     {
+        // Neither of these is a fault and neither is worth coming back for: an
+        // unconnected shop has no channel to send on, and a merchant who turned
+        // sharing off has already answered. The reply would be identical on
+        // every future attempt, so this is done, not retry — returning "retry"
+        // here (which is what the old `false` meant) would pin a row in the
+        // queue until it aged out.
         if (!Settings::isConnected() || !Settings::get('SHARE_SEARCH_DATA', true)) {
-            return false;
+            return self::orderOutcome(true, 0, 'not reporting');
+        }
+
+        $occurredAt = isset($report['occurred_at']) ? (string) $report['occurred_at'] : '';
+        if ($occurredAt === '') {
+            return self::orderOutcome(true, 0, 'missing occurred_at');
         }
 
         $itemIds = array();
@@ -244,24 +319,78 @@ final class Client
         }
 
         $body = json_encode(array(
-            'order_ref' => hash('sha256', Settings::installId() . '|order|' . (int) $report['order_id']),
-            'value_cents' => (int) $report['value_cents'],
-            'currency' => (string) $report['currency'],
-            'occurred_at' => (string) $report['occurred_at'],
+            'order_ref' => hash('sha256', Settings::installId() . '|order|' . (int) (isset($report['order_id']) ? $report['order_id'] : 0)),
+            'value_cents' => (int) (isset($report['value_cents']) ? $report['value_cents'] : 0),
+            'currency' => (string) (isset($report['currency']) ? $report['currency'] : ''),
+            'occurred_at' => $occurredAt,
             'item_ids' => array_values($itemIds),
             'q' => (string) (isset($report['q']) ? $report['q'] : ''),
         ));
 
-        $res = self::signed('POST', '/v1/orders', $body, 10);
-
-        // A 4xx is NOT retryable — the payload is wrong, or this shop is not
-        // entitled, and re-sending it forever would just be noise. Only a
-        // transport failure or a 5xx earns another attempt.
-        if (!$res['ok'] && $res['status'] >= 400 && $res['status'] < 500) {
-            return true;
+        if (!is_string($body)) {
+            // Unencodable payload — malformed UTF-8 in the search term, say. It
+            // will not encode on the next attempt either.
+            return self::orderOutcome(true, 0, 'unencodable payload');
         }
 
-        return $res['ok'];
+        $res = self::signed('POST', '/v1/orders', $body, 10);
+        $status = (int) $res['status'];
+
+        if ($res['ok']) {
+            return self::orderOutcome(true, $status, '');
+        }
+
+        $retry = self::isOrderRetryable($status);
+        $detail = $status === 0
+            ? (string) $res['error']
+            : 'HTTP ' . $status . ': ' . substr((string) $res['error'], 0, 200);
+
+        return self::orderOutcome(!$retry, $status, $detail);
+    }
+
+    /**
+     * Is this outcome worth another attempt?
+     *
+     * Status 0 is a transport failure — a timeout, a DNS blip, a refused
+     * connection, a TLS error. The request never got an answer, so nothing is
+     * known about whether the order was recorded, and retrying is safe precisely
+     * because the payload is re-sent unchanged and the service deduplicates on
+     * its contents.
+     *
+     * @param int $status
+     *
+     * @return bool
+     */
+    private static function isOrderRetryable($status)
+    {
+        $status = (int) $status;
+
+        return $status === 0
+            || $status >= 500
+            || in_array($status, self::ORDER_RETRY_CODES, true);
+    }
+
+    /**
+     * Build the tri-state reportOrder() answer. `done` and `retry` are always
+     * exact opposites; both are named on the wire so the caller reads what it
+     * means rather than negating a flag — the old boolean was returned as `true`
+     * for "drop this" and `false` for "keep it", which is the reading that made
+     * the defect above survive review.
+     *
+     * @param bool   $done
+     * @param int    $status
+     * @param string $error
+     *
+     * @return array{done: bool, retry: bool, status: int, error: string}
+     */
+    private static function orderOutcome($done, $status, $error)
+    {
+        return array(
+            'done' => (bool) $done,
+            'retry' => !$done,
+            'status' => (int) $status,
+            'error' => (string) $error,
+        );
     }
 
     /**
