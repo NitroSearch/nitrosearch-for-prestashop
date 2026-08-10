@@ -31,8 +31,8 @@ die()   { red "FAIL  $*"; exit 1; }
 # instantiation. When they disagree the back office shows one number and the
 # upgrade machinery uses the other, and nobody notices until an upgrade does not
 # run.
-version_php="$(grep -oE "this->version = '[^']+'" "${MODULE}.php" | head -1 | sed "s/.*'\(.*\)'/\1/")"
-version_xml="$(grep -oE '<version><!\[CDATA\[[^]]+' config.xml | head -1 | sed 's/.*\[//')"
+version_php="$(grep -oE "this->version = '[^']+'" "${MODULE}.php" | sed -n '1p' | sed "s/.*'\(.*\)'/\1/")"
+version_xml="$(grep -oE '<version><!\[CDATA\[[^]]+' config.xml | sed -n '1p' | sed 's/.*\[//')"
 
 [ -n "$version_php" ] || die "no \$this->version in ${MODULE}.php"
 [ "$version_php" = "$version_xml" ] \
