@@ -6,6 +6,26 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-08-10
+
+### Fixed
+
+- **Orders that came from a search are no longer thrown away when the service is busy or briefly
+  unavailable.** The module reported an order once and treated any refusal as final — so an order
+  placed while your shop was still being verified, or while the service was rate-limiting a burst of
+  sales, was dropped and never counted. The worst case was the one that matters most: during a rush,
+  every order past the service's per-minute limit was discarded, so **your busiest hour reported the
+  least revenue**. Reports are now kept and retried with widening gaps, and if one truly cannot be
+  delivered it is recorded in **Advanced Parameters → Logs** rather than vanishing.
+
+- **Revenue can no longer be counted twice.** The timestamp identifying an order was recalculated
+  each time a report was sent, so a retry that happened across a daylight-saving change looked like
+  a second, different order. The timestamp is now fixed when the order is queued and sent unchanged.
+
+- **Reports are no longer kept longer than they can be used.** The queue held an order for fourteen
+  days, past the point the service will accept its timestamp, so the oldest reports could never
+  land at all.
+
 ### Changed
 
 - **The module now has a test suite, and it runs on every change.** The conformance fixtures under
@@ -113,7 +133,8 @@ All notable changes to this module are documented here. The format follows
     in integer minor units with the currency's own exponent — so yen and dinar are correct rather
     than scaled by a hundred out of habit.
 
-[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/tag/v1.0.0

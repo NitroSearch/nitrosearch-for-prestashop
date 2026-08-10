@@ -2,7 +2,7 @@
 <module>
     <name>nitrosearch</name>
     <displayName><![CDATA[NitroSearch]]></displayName>
-    <version><![CDATA[1.2.0]]></version>
+    <version><![CDATA[1.2.1]]></version>
     <description><![CDATA[Fast, typo-tolerant search for your shop. Results appear as your shoppers type.]]></description>
     <author><![CDATA[WebDeviAnt Studios]]></author>
     <tab><![CDATA[search_filter]]></tab>
