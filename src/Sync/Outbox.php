@@ -88,6 +88,48 @@ final class Outbox
      * @param int    $objectId
      * @param string $op         'upsert' or 'delete'
      */
+    /**
+     * Create this table if the shop has never had it.
+     *
+     * ⚠ THE SAME HOLE THE ORDER-REPORT TABLE HAD, and it is worth stating plainly:
+     * **this module has no `upgrade/` directory and no upgrade script.** PrestaShop
+     * runs `install()` when a module is INSTALLED and never when it is upgraded in
+     * place, so every table and every column this module has ever wanted to add
+     * reaches a fresh install and no existing shop.
+     *
+     * The order-report table met exactly that and the failure was invisible: the write
+     * is sealed inside a `try` so a shopper's checkout cannot break over analytics, so
+     * a missing table meant attribution silently produced nothing, forever, with the
+     * back office reporting no error at all.
+     *
+     * Nothing has yet needed to ALTER this table, which is the only reason the outbox
+     * has not met it too — and "has not happened yet" is not a property worth relying
+     * on. Called from the write path rather than the read path because the write is
+     * what fails destructively.
+     *
+     * RUNS ONCE PER REQUEST. `CREATE TABLE IF NOT EXISTS` is cheap but it is not free,
+     * and the full walk calls `enqueueMany()` once per page of 500.
+     */
+    private static $schemaChecked = false;
+
+    public static function ensureSchema()
+    {
+        if (self::$schemaChecked) {
+            return;
+        }
+        self::$schemaChecked = true;
+
+        try {
+            Db::getInstance()->execute(self::schema());
+        } catch (\Exception $e) {
+            // A shop whose database user cannot CREATE keeps whatever it has. Failing
+            // here would turn a missing table into a broken save on the merchant's
+            // product screen, which is strictly worse than a stalled sync.
+        } catch (\Throwable $e) {
+            // Same, on PHP 7+ error types.
+        }
+    }
+
     public static function enqueue($objectType, $objectId, $op)
     {
         $objectId = (int) $objectId;
@@ -120,6 +162,8 @@ final class Outbox
         if (empty($ids)) {
             return;
         }
+
+        self::ensureSchema();
 
         $db = Db::getInstance();
         $type = pSQL($objectType);

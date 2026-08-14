@@ -218,11 +218,31 @@ final class OrderAttribution
         );
 
         try {
+            // ⚠ CREATE FIRST, AND THIS IS THE HALF THAT WAS MISSING. Until 2026-08-11
+            // this method went straight to SHOW COLUMNS and, when the table was absent,
+            // concluded "there is nothing to add to" and gave up. That is the wrong
+            // answer to the wrong question: a shop whose table is MISSING is not a shop
+            // that needs a column, it is a shop that never ran `install()`.
+            //
+            // THIS MODULE HAS NO UPGRADE SCRIPT AND NO `upgrade/` DIRECTORY. PrestaShop
+            // runs `install()` on an INSTALL and never on an in-place upgrade, so the
+            // order-report table — added in 1.1.0 — was only ever created on shops that
+            // installed at 1.1.0 or later. A shop that installed 1.0.0 and uploaded a
+            // newer version has no table at all: every INSERT fails, `orderValidated()`
+            // swallows it by design (a shopper's checkout must never break over
+            // analytics), and search attribution is dead permanently with nothing in the
+            // back office saying so. The merchant sees zero attributed revenue and has no
+            // reason to think anything is wrong.
+            //
+            // `CREATE TABLE IF NOT EXISTS` rather than a `SHOW TABLES` probe: one
+            // statement, idempotent, and it cannot race with a concurrent request.
+            Db::getInstance()->execute(self::schema());
+
             $present = array();
             $columns = Db::getInstance()->executeS('SHOW COLUMNS FROM `' . self::table() . '`');
             if (!is_array($columns)) {
-                // The table is missing entirely, or the query was refused. Either
-                // way there is nothing to add to.
+                // Now this genuinely means the query was refused — a database user
+                // without rights, or a broken connection — rather than an absent table.
                 self::$extended = false;
 
                 return false;
