@@ -6,6 +6,23 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Fixed
+
+- **A shop that upgraded the module in place had no order-report table, and lost every attributed
+  sale.** PrestaShop runs a module's `install()` when it is installed and never when it is upgraded,
+  and this module has no upgrade script — so the order-report table, added in 1.1.0, only ever
+  existed on shops that installed at 1.1.0 or later. On any shop that started at 1.0.0 every report
+  INSERT failed, the failure was swallowed by the seal that stops analytics breaking a shopper's
+  checkout, and search-attributed revenue silently read zero forever with nothing in the back office
+  saying so. Both tables are now created on first use, not only at install.
+
+- **A custom accent colour left its label text unreadable.** The module worked out whether dark or
+  light text belonged on the merchant's chosen accent, sent it under the wrong name, and the search
+  panel never saw it — falling back to white, which is right for a dark accent and invisible on a
+  pale one.
+
 ## [1.2.1] — 2026-08-10
 
 ### Fixed

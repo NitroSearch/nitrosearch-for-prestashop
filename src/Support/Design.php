@@ -98,7 +98,20 @@ final class Design
             // Label text on the accent is decided HERE, not by the widget: the
             // widget would have to ship a colour-contrast routine to work it out,
             // and it is one boolean we already know the answer to.
-            $theme['onAccent'] = self::isLight($accent) ? '#111827' : '#ffffff';
+            //
+            // ⚠ THE KEY IS `accentContrast`, AND IT WAS `onAccent` UNTIL 2026-08-11.
+            // The widget reads `cfg.theme.accentContrast` and nothing else, so this
+            // value — correctly computed, on the right condition — was assembled,
+            // serialised, sent, and thrown away. The fallback is `#ffffff`, which is
+            // right for the dark accents most shops pick and invisible for a light
+            // one: a merchant who chose a pale accent got white text on it and no
+            // way to find out why. Nothing errors, which is why it survived.
+            //
+            // The only reason this was findable at all is that the sibling connector
+            // emits the same value under the correct name. A cfg key is a contract
+            // with the widget as much as the wire is with the service, and it has no
+            // schema on either side — a typo here is silent by construction.
+            $theme['accentContrast'] = self::isLight($accent) ? '#111827' : '#ffffff';
         }
 
         return $theme;
