@@ -6,7 +6,7 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
-## [Unreleased]
+## [1.2.2] — 2026-08-15
 
 ### Fixed
 
