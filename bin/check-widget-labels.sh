@@ -91,22 +91,34 @@ if [ "${1:-}" = "--self-test" ]; then
   printf '<?php\nreturn ["one_key" => "", "plural" => ["one" => "a"], "surprise" => "z"];\n' \
     > "$TMP/bad/bb_BB.php"
 
+  # ⚠ NO QUIET-MATCH PIPELINES BELOW. Under `pipefail`, piping a producer into a
+  # matcher that exits on its first hit reports FAILURE when the pattern MATCHES:
+  # the matcher leaves, the producer takes SIGPIPE and exits 141, and pipefail
+  # returns the 141. This project has shipped two releases over exactly that.
+  # The output is already in a variable, so match the variable with `case` and
+  # keep the pipeline out of it entirely.
   OUT="$(inspect "$TMP/good")"
-  if printf '%s' "$OUT" | grep -qv '^COUNT:'; then
-    echo "selftest FAILED: a good tree was reported broken:"; printf '%s\n' "$OUT"; exit 1
-  fi
-  [ "$(printf '%s' "$OUT" | grep -c '^COUNT:2:2$')" = "1" ] \
-    || { echo "selftest FAILED: did not count 2 catalogues of 2 keys"; exit 1; }
+  case "$OUT" in
+    *COUNT:2:2*) ;;
+    *) echo "selftest FAILED: did not count 2 catalogues of 2 keys:"; printf '%s\n' "$OUT"; exit 1 ;;
+  esac
+  NOISE="$(printf '%s\n' "$OUT" | grep -vc '^COUNT:' || true)"
+  [ "$NOISE" = "0" ] \
+    || { echo "selftest FAILED: a good tree was reported broken:"; printf '%s\n' "$OUT"; exit 1; }
 
   OUT="$(inspect "$TMP/bad")"
-  for expect in "disagrees with" "is empty" 'has no "other" form'; do
-    printf '%s' "$OUT" | grep -qF "$expect" \
-      || { echo "selftest FAILED: '$expect' went undetected"; printf '%s\n' "$OUT"; exit 1; }
+  for expect in "disagrees with" "is empty" "has no \"other\" form"; do
+    case "$OUT" in
+      *"$expect"*) ;;
+      *) echo "selftest FAILED: '$expect' went undetected"; printf '%s\n' "$OUT"; exit 1 ;;
+    esac
   done
 
   OUT="$(inspect "$TMP/empty")"
-  printf '%s' "$OUT" | grep -q 'no catalogues found' \
-    || { echo "selftest FAILED: an empty directory did not report as empty"; exit 1; }
+  case "$OUT" in
+    *"no catalogues found"*) ;;
+    *) echo "selftest FAILED: an empty directory did not report as empty"; exit 1 ;;
+  esac
 
   echo "selftest ok: key drift, an empty string, a plural with no fallback and an empty set are all caught"
   exit 0
