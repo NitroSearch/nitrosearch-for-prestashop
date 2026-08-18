@@ -23,6 +23,7 @@ require_once __DIR__ . '/autoload.php';
 use NitroSearch\Admin\ConfigurePage;
 use NitroSearch\Api\Client;
 use NitroSearch\Settings;
+use NitroSearch\Storefront\Labels;
 use NitroSearch\Sync\Drain;
 use NitroSearch\Sync\FullSync;
 use NitroSearch\Sync\OrderAttribution;
@@ -397,6 +398,15 @@ class NitroSearch extends Module
             'theme' => (object) Design::theme(),
             'layout' => (object) Design::layout(),
         );
+
+        // The panel's own strings in the shop's language. Absent for English and
+        // for any locale we have nothing better than the bundle's built-in text
+        // for — the widget falls back per key, so sending nothing is correct
+        // rather than merely safe. See src/Storefront/Labels.php.
+        $labels = Labels::forLocale((string) $this->context->language->locale);
+        if (!empty($labels)) {
+            $config['labels'] = $labels;
+        }
 
         if ((bool) Settings::get('SHOW_BADGE')) {
             $config['badgeUrl'] = 'https://nitrosearch.io';

@@ -6,6 +6,25 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- **The search panel now speaks your shop's language.** The panel a shopper sees — its
+  filters, its "Add to cart", its result counts — was English on every shop, whatever
+  language the shop was in, because it is drawn by a shared component that carries no
+  translations of its own. It now receives them from the module, in 23 languages:
+  Czech, Danish, Dutch, English (UK), Finnish, French, German, Greek, Indonesian,
+  Italian, Japanese, Norwegian, Polish, Portuguese (Portugal and Brazil), Romanian,
+  Russian, Spanish, Swedish, Turkish, Ukrainian, Vietnamese and Chinese (Simplified).
+
+  Result counts agree with the language's own grammar rather than adding an "s" —
+  Romanian, Russian, Polish and Czech each pick between three forms depending on the
+  number, and Japanese uses one for every count.
+
+  Nothing to configure: a shop gets its own language automatically, and a shop in a
+  language not on that list is unchanged. A shop whose language has a region we do not
+  publish separately reads the closest one — Austrian and Belgian shops read German and
+  French — except in English, where the panel's own wording is already correct.
+
 ## [1.2.2] — 2026-08-15
 
 ### Fixed
