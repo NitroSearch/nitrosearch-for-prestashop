@@ -51,7 +51,7 @@ class NitroSearch extends Module
     {
         $this->name = 'nitrosearch';
         $this->tab = 'search_filter';
-        $this->version = '1.2.2';
+        $this->version = '1.3.0';
         $this->author = 'WebDeviAnt Studios';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.7.6.0', 'max' => _PS_VERSION_);

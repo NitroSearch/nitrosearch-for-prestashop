@@ -6,6 +6,8 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-08-18
+
 ### Added
 
 - **The search panel now speaks your shop's language.** The panel a shopper sees — its
@@ -170,6 +172,8 @@ All notable changes to this module are documented here. The format follows
     than scaled by a hundred out of habit.
 
 [Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.1...HEAD
+[1.3.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.2...v1.3.0
+[1.2.2]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.0.0...v1.1.0
