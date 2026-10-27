@@ -6,6 +6,8 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.1] — 2026-10-27
+
 ### Fixed
 
 - **The module now works on PrestaShop 9.** On every PrestaShop 9 shop, every
@@ -187,7 +189,8 @@ All notable changes to this module are documented here. The format follows
     in integer minor units with the currency's own exponent — so yen and dinar are correct rather
     than scaled by a hundred out of habit.
 
-[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/NitroSearch/nitrosearch-for-prestashop/compare/v1.2.0...v1.2.1
