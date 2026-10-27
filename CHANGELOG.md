@@ -6,6 +6,22 @@ All notable changes to this module are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- **The module now works on PrestaShop 9.** On every PrestaShop 9 shop, every
+  button on the Configure screen (Connect, Save, Disconnect, Send now) answered
+  "Your session has expired. Please reload this page and try again.", so a
+  PrestaShop 9 shop could not be connected at all. The screen checked its forms
+  against PrestaShop's admin token, which PrestaShop 9 regenerates on every call,
+  so the value on the page could never match the value it was checked against.
+  The module now issues and checks its own token, tied to the signed-in employee
+  and to a secret only the shop holds. It works the same on 1.7.6 to 9.x.
+
+  Tested on PrestaShop 9.2.0 with the Hummingbird theme on PHP 8.4: connect,
+  catalogue and CMS page sync, search, add to cart from the results, and
+  search-attributed orders through both the step-by-step checkout and the new
+  one-page checkout.
+
 ## [1.3.0] — 2026-08-18
 
 ### Added

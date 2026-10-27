@@ -22,6 +22,7 @@ use NitroSearch\Sync\Drain;
 use NitroSearch\Sync\FullSync;
 use NitroSearch\Sync\OrderAttribution;
 use NitroSearch\Sync\Outbox;
+use NitroSearch\Support\AdminFormToken;
 use NitroSearch\Support\ShopContext;
 use Tools;
 
@@ -116,9 +117,17 @@ final class ConfigurePage
      */
     private function tokenIsValid()
     {
-        $provided = (string) Tools::getValue('nitro_token');
+        return AdminFormToken::verify(Tools::getValue('nitro_token'), $this->employeeId(), _COOKIE_KEY_);
+    }
 
-        return $provided !== '' && hash_equals(Tools::getAdminTokenLite('AdminModules'), $provided);
+    /**
+     * @return int
+     */
+    private function employeeId()
+    {
+        $employee = Context::getContext()->employee;
+
+        return $employee ? (int) $employee->id : 0;
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -401,7 +410,7 @@ final class ConfigurePage
         return array(
             'nitro_confirmations' => $this->confirmations,
             'nitro_errors' => $this->errors,
-            'nitro_token' => Tools::getAdminTokenLite('AdminModules'),
+            'nitro_token' => AdminFormToken::issue($this->employeeId(), _COOKIE_KEY_),
             'nitro_action_url' => Context::getContext()->link->getAdminLink('AdminModules', true)
                 . '&configure=' . $this->module->name,
 
