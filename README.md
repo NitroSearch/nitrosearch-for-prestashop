@@ -18,7 +18,7 @@
 
 <p align="center">
   <a href="https://github.com/NitroSearch/nitrosearch-for-prestashop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/NitroSearch/nitrosearch-for-prestashop?label=release&color=2563eb"></a>
-  <img alt="PrestaShop 1.7.6+" src="https://img.shields.io/badge/PrestaShop-1.7.6%2B%20%C2%B7%208.x-blue">
+  <img alt="PrestaShop 1.7.6+, 8.x and 9.x" src="https://img.shields.io/badge/PrestaShop-1.7.6%2B%20%C2%B7%208.x%20%C2%B7%209.x-blue">
   <img alt="PHP 7.2+" src="https://img.shields.io/badge/PHP-7.2%2B-777bb4">
   <a href="LICENSE"><img alt="AFL-3.0" src="https://img.shields.io/badge/licence-AFL--3.0-green"></a>
 </p>
